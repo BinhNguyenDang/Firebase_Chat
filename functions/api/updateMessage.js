@@ -4,18 +4,18 @@ const functions = require("firebase-functions");
 // Importing Firebase Admin module.
 const admin = require("firebase-admin");
 
-// Defining Firebase Cloud Function named deleteMessage.
-exports.deleteMessage = functions.https.onCall(async (data, context) => {
+exports.updateMessage = functions.https.onCall(async (data, context) => {
   try {
-    if (!data.userId || !data.messageId) {
-      // Throwing an HTTP error if either userId or messageId is missing,
-      // Indicating an invalid argument.
+    // Checking if the userId or messageId is missing in the input data.
+    if (!data.userId || !data.messageId || !data.text) {
+      // Throwing an HTTP error if userId or messageId is missing,
+      // indicating an invalid argument.
       throw new functions.https.HttpsError(
           "invalid-argument",
-          "Missing userId or messageId");
+          "Missing userId or messageId",
+      );
     }
-
-    // Extracting the userId and messageId
+    // Extracting the userId and messageId from the input data.
     const {userId, messageId} = data;
 
     // Creating a reference to the specific message document in Firestore.
@@ -29,14 +29,21 @@ exports.deleteMessage = functions.https.onCall(async (data, context) => {
     // Checking if the message document exists in Firestore.
     if (!((await messageRef.get()).exists)) {
       // Throwing an HTTP error if the message document is not found.
-      throw new functions.https.HttpsError("not-found", "Message not found");
+      throw new functions.https.HttpsError(
+          "not-found",
+          "Message not found",
+      );
     }
-
-    // Deleting the message document from Firestore.
-    await messageRef.delete();
-
-    // Returning a success status
-    return {status: "success"};
+    // Updating the text field in the message document.
+    await messageRef.update({
+      text: data.text,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    console.log("Document successfully updated");
+    return {
+      status: "success",
+      message: (await messageRef.get()).data(),
+    };
   } catch (error) {
     // Logging any errors that occur during execution.
     console.log(error);
@@ -51,4 +58,5 @@ exports.deleteMessage = functions.https.onCall(async (data, context) => {
         error,
     );
   }
-});
+},
+);
