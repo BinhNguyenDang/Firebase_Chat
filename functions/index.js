@@ -5,8 +5,11 @@ admin.initializeApp();
 const {addMessage} = require("./api/addMessage");
 const {deleteMessage} = require("./api/deleteMessage");
 const {updateMessage} = require("./api/updateMessage");
+const {getMessage} = require("./api/getMessage");
+
 
 // Export the function for deployment
 exports.addMessage = addMessage;
 exports.deleteMessage = deleteMessage;
 exports.updateMessage = updateMessage;
+exports.getMessage = getMessage;
